@@ -1,4 +1,4 @@
-[![GoDoc](https://pkg.go.dev/github.com/gonevo/readablebytes?status.svg)](https://pkg.go.dev/github.com/gonevo/readablebytes)
+[![Go Reference](https://pkg.go.dev/badge/github.com/gonevo/readablebytes.svg)](https://pkg.go.dev/github.com/gonevo/readablebytes)
 
 # Introduction
 
