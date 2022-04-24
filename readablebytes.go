@@ -1,10 +1,12 @@
 package readablebytes
 
 import (
+	"bytes"
 	"fmt"
-	"regexp"
+	"math"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // Exported units abbreviations
@@ -26,14 +28,7 @@ const (
 	PiB = 1024 * TiB
 )
 
-type unitMap map[string]int64
-
-var (
-	decMap    = unitMap{"k": KB, "m": MB, "g": GB, "t": TB, "p": PB}
-	binMap    = unitMap{"k": KiB, "m": MiB, "g": GiB, "t": TiB, "p": PiB}
-	sizeRegex = regexp.MustCompile(`(?i)^(\d+(\.\d+)*) ?([kmgtp])?(i?)b?$`)
-)
-
+var units = []byte("kmgtpezy")
 var decUnits = []string{"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
 var binUnits = []string{"B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"}
 
@@ -73,23 +68,47 @@ func humanSizeWithPrecision(size float64, precision int, base float64, _map []st
 }
 
 func parseString(sizeStr string) (int64, error) {
-	matches := sizeRegex.FindStringSubmatch(sizeStr)
-	if len(matches) != 5 {
+	sizeStr = strings.ToLower(sizeStr)
+	strLen := len(sizeStr)
+	if strLen == 0 {
 		return -1, fmt.Errorf("invalid size: '%s'", sizeStr)
 	}
+	var unitPrefixPos, lastNumberPos int
+	var binary bool
+	for i := strLen - 1; i >= 0; i-- {
+		if unicode.IsDigit(rune(sizeStr[i])) {
+			lastNumberPos = i
+			break
+		}
 
-	size, err := strconv.ParseFloat(matches[1], 64)
+		if sizeStr[i] == 'i' {
+			binary = true
+			continue
+		}
+
+		if sizeStr[i] != ' ' {
+			unitPrefixPos = i
+		}
+	}
+
+	size, err := strconv.ParseFloat(sizeStr[:lastNumberPos+1], 64)
 	if err != nil {
 		return -1, err
 	}
 
-	unitPrefix := strings.ToLower(matches[3])
-	unitsMap := decMap
-	if matches[4] != "" {
-		unitsMap = binMap
+	if size < 0 {
+		return -1, fmt.Errorf("size is less than zero")
 	}
-	if mul, ok := unitsMap[unitPrefix]; ok {
-		size *= float64(mul)
+
+	if unitPrefixPos > 0 {
+		index := bytes.IndexByte(units, sizeStr[unitPrefixPos])
+		if index != -1 {
+			base := 1000
+			if binary {
+				base = 1024
+			}
+			size *= math.Pow(float64(base), float64(index+1))
+		}
 	}
 
 	return int64(size), nil

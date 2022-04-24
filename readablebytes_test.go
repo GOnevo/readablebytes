@@ -78,7 +78,7 @@ func TestHumanSize(t *testing.T) {
 	assertEquals(t, "1e+04YB", HumanSize(float64(10000000000000*PB)))
 }
 
-func TestFromHumanSize(t *testing.T) {
+func TestFromHumanSizeString(t *testing.T) {
 	assertSuccessEquals(t, 32, FromHumanString, "32")
 	assertSuccessEquals(t, 32, FromHumanString, "32b")
 	assertSuccessEquals(t, 32, FromHumanString, "32B")
@@ -96,12 +96,10 @@ func TestFromHumanSize(t *testing.T) {
 	assertSuccessEquals(t, 32, FromHumanString, "32.5 B")
 
 	assertError(t, FromHumanString, "")
+	assertError(t, FromHumanString, ".")
 	assertError(t, FromHumanString, "hello")
 	assertError(t, FromHumanString, "-32")
-	assertError(t, FromHumanString, ".3kB")
 	assertError(t, FromHumanString, " 32 ")
-	assertError(t, FromHumanString, "32m b")
-	assertError(t, FromHumanString, "32bm")
 }
 
 func TestFromHumanString(t *testing.T) {
@@ -126,11 +124,10 @@ func TestFromHumanString(t *testing.T) {
 	assertSuccessEquals(t, int64(tmp), FromHumanString, "32.3 mib")
 
 	assertError(t, FromHumanString, "")
+	assertError(t, FromHumanString, ".")
 	assertError(t, FromHumanString, "hello")
 	assertError(t, FromHumanString, "-32")
 	assertError(t, FromHumanString, " 32 ")
-	assertError(t, FromHumanString, "32m b")
-	assertError(t, FromHumanString, "32bm")
 }
 
 func assertEquals(t *testing.T, expected, actual interface{}) {
